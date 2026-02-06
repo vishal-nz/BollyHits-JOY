@@ -13,6 +13,13 @@
     color: #fff;
   }
 
+  /* SCALE WRAPPER */
+  .scale-wrap {
+    transform: scale(0.70); /* Adjust size here */
+    transform-origin: top center;
+    width: 100%;
+  }
+
   header {
     background: #ffb300;
     padding: 18px;
@@ -30,7 +37,6 @@
     border-radius: 12px;
   }
 
-  /* NOW PLAYING ART (smaller) */
   .art-large {
     width: 100%;
     max-width: 220px;
@@ -106,7 +112,6 @@
     font-weight: bold;
   }
 
-  /* NEXT SONG */
   .next-box {
     background: #222;
     padding: 20px;
@@ -150,7 +155,6 @@
     color: #bbb;
   }
 
-  /* HISTORY SECTION */
   .history-box {
     margin-top: 35px;
   }
@@ -207,7 +211,6 @@
     margin-top: 4px;
   }
 
-  /* IMAGE MODAL */
   #imgModal {
     display: none;
     position: fixed;
@@ -234,6 +237,7 @@
 
 <header>BollyHits JOY</header>
 
+<div class="scale-wrap">
 <div class="container">
 
   <img id="art" class="art-large" src="" alt="Album Art">
@@ -257,7 +261,6 @@
     <source src="https://radio.bollyhitsradio.com/listen/bollyhits_joy/radio.mp3" type="audio/mpeg">
   </audio>
 
-  <!-- NEXT SONG -->
   <div class="next-box">
     <div class="next-title">Up Next</div>
     <div class="next-row">
@@ -270,15 +273,14 @@
     </div>
   </div>
 
-  <!-- HISTORY SECTION -->
   <div class="history-box">
     <div class="history-title">Recently Played</div>
     <div id="historyList"></div>
   </div>
 
 </div>
+</div>
 
-<!-- IMAGE MODAL -->
 <div id="imgModal">
   <img id="modalImg" src="">
 </div>
@@ -320,7 +322,6 @@ async function loadNowPlaying() {
   document.getElementById("art").src = track.art;
   document.getElementById("art").onclick = () => enlargeImage(track.art);
 
-  /* NEXT SONG */
   if (data.playing_next && data.playing_next.song) {
     const next = data.playing_next.song;
     document.getElementById("nextSong").textContent = next.title;
@@ -330,7 +331,6 @@ async function loadNowPlaying() {
     document.getElementById("nextArt").onclick = () => enlargeImage(next.art);
   }
 
-  /* HISTORY */
   const historyList = document.getElementById("historyList");
   historyList.innerHTML = "";
 
