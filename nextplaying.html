@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BollyHits Now Playing Widget</title>
+  <style>
+    .bh-widget {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #05040a;
+      color: #f7f2e9;
+      padding: 16px 18px;
+      border-radius: 12px;
+      max-width: 360px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .bh-art {
+      width: 72px;
+      height: 72px;
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.35);
+    }
+
+    .bh-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .bh-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bh-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #f2c94c;
+      margin-bottom: 4px;
+    }
+
+    .bh-title {
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bh-artist {
+      font-size: 13px;
+      color: #d1c7ff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .bh-album {
+      font-size: 12px;
+      color: #b0a8d9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .bh-footer {
+      font-size: 11px;
+      color: #9b9b9b;
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bh-listeners {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bh-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #27ae60;
+      box-shadow: 0 0 6px rgba(39, 174, 96, 0.9);
+    }
+  </style>
+</head>
+<body>
+
+<div class="bh-widget" id="bh-widget">
+  <div class="bh-art">
+    <img id="bh-next-art" src="" alt="Album Art" />
+  </div>
+  <div class="bh-meta">
+    <div class="bh-label">Next on BollyHits</div>
+    <div class="bh-title" id="bh-next-title">Loading…</div>
+    <div class="bh-artist" id="bh-next-artist"></div>
+    <div class="bh-album" id="bh-next-album"></div>
+    <div class="bh-footer">
+      <div class="bh-listeners">
+        <span class="bh-dot"></span>
+        <span id="bh-listeners">Listeners: --</span>
+      </div>
+      <span id="bh-station-name"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_URL = "https://radio.bollyhitsradio.com/api/nowplaying/4";
+
+  async function loadBollyHitsData() {
+    try {
+      const res = await fetch(API_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error("Network response was not ok");
+      const data = await res.json();
+
+      // Listener count (AzuraCast-style)
+      const listeners = data.listeners?.current ?? data.listeners ?? "--";
+
+      // Station name (if present)
+      const stationName = data.station?.name || "BollyHits Radio";
+
+      // Next playing block (AzuraCast: data.playing_next.song)
+      const next = data.playing_next?.song || {};
+      const nextTitle = next.title || "Coming up next…";
+      const nextArtist = next.artist || "";
+      const nextAlbum = next.album || "";
+      const nextArt =
+        next.art ||
+        data.now_playing?.song?.art ||
+        "https://via.placeholder.com/300x300/111111/ffffff?text=BollyHits";
+
+      document.getElementById("bh-listeners").textContent =
+        "Listeners: " + listeners;
+      document.getElementById("bh-station-name").textContent = stationName;
+
+      document.getElementById("bh-next-title").textContent = nextTitle;
+      document.getElementById("bh-next-artist").textContent = nextArtist;
+      document.getElementById("bh-next-album").textContent =
+        nextAlbum ? "Album: " + nextAlbum : "";
+
+      document.getElementById("bh-next-art").src = nextArt;
+      document.getElementById("bh-next-art").alt = nextTitle;
+    } catch (err) {
+      console.error(err);
+      document.getElementById("bh-next-title").textContent =
+        "Unable to load next track";
+    }
+  }
+
+  // Initial load + optional refresh every 30 seconds
+  loadBollyHitsData();
+  setInterval(loadBollyHitsData, 30000);
+</script>
+
+</body>
+</html>
