@@ -30,12 +30,14 @@
     border-radius: 12px;
   }
 
+  /* NOW PLAYING ART (smaller) */
   .art-large {
     width: 100%;
-    max-width: 350px;
+    max-width: 220px;
     border-radius: 12px;
     display: block;
     margin: 0 auto 20px;
+    cursor: pointer;
     box-shadow: 0 0 20px rgba(255,255,255,0.15);
   }
 
@@ -131,6 +133,7 @@
     height: 90px;
     border-radius: 8px;
     object-fit: cover;
+    cursor: pointer;
   }
 
   .next-info {
@@ -145,6 +148,84 @@
   .next-artist, .next-album {
     font-size: 15px;
     color: #bbb;
+  }
+
+  /* HISTORY SECTION */
+  .history-box {
+    margin-top: 35px;
+  }
+
+  .history-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffcc4d;
+    margin-bottom: 15px;
+  }
+
+  .history-item {
+    display: flex;
+    gap: 15px;
+    background: #1a1a1a;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 4px solid #333;
+  }
+
+  .history-art {
+    width: 70px;
+    height: 70px;
+    border-radius: 6px;
+    object-fit: cover;
+    cursor: pointer;
+  }
+
+  .history-info {
+    flex: 1;
+  }
+
+  .history-title-text {
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+  }
+
+  .history-artist {
+    font-size: 14px;
+    color: #bbb;
+  }
+
+  .history-album {
+    font-size: 13px;
+    color: #ffcc4d;
+    margin-top: 3px;
+  }
+
+  .history-time {
+    font-size: 12px;
+    color: #777;
+    margin-top: 4px;
+  }
+
+  /* IMAGE MODAL */
+  #imgModal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    justify-content: center;
+    align-items: center;
+  }
+
+  #imgModal img {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(255,255,255,0.3);
   }
 </style>
 </head>
@@ -173,9 +254,10 @@
   </div>
 
   <audio id="player" autoplay>
-    <source src="https://radio.bollyhitsradio.com/listen/bollyhits_joy/radio.mp3" type="audio/mpeg">
+    <source src="https://az13.yesstreaming.net:8450/bollyhitsjoy192kbps" type="audio/mpeg">
   </audio>
 
+  <!-- NEXT SONG -->
   <div class="next-box">
     <div class="next-title">Up Next</div>
     <div class="next-row">
@@ -188,6 +270,17 @@
     </div>
   </div>
 
+  <!-- HISTORY SECTION -->
+  <div class="history-box">
+    <div class="history-title">Recently Played</div>
+    <div id="historyList"></div>
+  </div>
+
+</div>
+
+<!-- IMAGE MODAL -->
+<div id="imgModal">
+  <img id="modalImg" src="">
 </div>
 
 <script>
@@ -199,6 +292,17 @@ function formatTime(sec) {
   const s = Math.floor(sec % 60);
   return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
+
+function enlargeImage(src) {
+  const modal = document.getElementById("imgModal");
+  const modalImg = document.getElementById("modalImg");
+  modalImg.src = src;
+  modal.style.display = "flex";
+}
+
+document.getElementById("imgModal").addEventListener("click", () => {
+  document.getElementById("imgModal").style.display = "none";
+});
 
 async function loadNowPlaying() {
   const res = await fetch("https://radio.bollyhitsradio.com/api/nowplaying/4");
@@ -214,15 +318,38 @@ async function loadNowPlaying() {
   document.getElementById("album").textContent = track.album ? "Album: " + track.album : "";
   document.getElementById("listeners").textContent = "Listeners: " + data.listeners.current;
   document.getElementById("art").src = track.art;
+  document.getElementById("art").onclick = () => enlargeImage(track.art);
 
-  // NEXT SONG
+  /* NEXT SONG */
   if (data.playing_next && data.playing_next.song) {
     const next = data.playing_next.song;
     document.getElementById("nextSong").textContent = next.title;
     document.getElementById("nextArtist").textContent = next.artist;
     document.getElementById("nextAlbum").textContent = next.album ? "Album: " + next.album : "";
     document.getElementById("nextArt").src = next.art;
+    document.getElementById("nextArt").onclick = () => enlargeImage(next.art);
   }
+
+  /* HISTORY */
+  const historyList = document.getElementById("historyList");
+  historyList.innerHTML = "";
+
+  data.song_history.forEach(item => {
+    const h = item.song;
+    const playedAt = new Date(item.played_at * 1000).toLocaleTimeString();
+
+    historyList.innerHTML += `
+      <div class="history-item">
+        <img class="history-art" src="${h.art}" onclick="enlargeImage('${h.art}')">
+        <div class="history-info">
+          <div class="history-title-text">${h.title}</div>
+          <div class="history-artist">${h.artist}</div>
+          <div class="history-album">Album: ${h.album || "Unknown"}</div>
+          <div class="history-time">Played at: ${playedAt}</div>
+        </div>
+      </div>
+    `;
+  });
 }
 
 function updateProgress() {
